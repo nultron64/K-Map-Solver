@@ -1,0 +1,14 @@
+.canvas-container {
+    height: 100%;
+    margin-top: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+#mainCanvas {
+    background-color: rgb(119, 201, 100);
+    border-radius: 5px;
+}
+
