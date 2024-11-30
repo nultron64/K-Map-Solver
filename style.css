@@ -1,14 +1,33 @@
-.canvas-container {
-    height: 100%;
-    margin-top: 80px;
+body {
+    background-color: #FFF6E9;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+.main-container {
+    text-align: center;
+}
+
+.canvas-container {
+    height: 100%;
+    margin-top: 80px;
+    position: relative;
+}
+
 
 #mainCanvas {
-    background-color: rgb(119, 201, 100);
+    background-color: #d7d8d8;
     border-radius: 5px;
 }
 
+#posText {
+    padding-top: 50px;
+    font-size: 50px;
+}
+
+#nVarsSelectMenu {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}

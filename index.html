@@ -7,10 +7,18 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="canvas-container">
-        <canvas id="mainCanvas" width="450" height="450"></canvas>
-    </div>
+    <div class="main-container">
+        <div class="canvas-container">
+            <canvas id="mainCanvas" width="450" height="450"></canvas>
 
+            <select id="nVarsSelectMenu" name="nVariables">
+                <option value="2">2 Variables</option>
+                <option value="3">3 Variables</option>
+                <option value="4" selected>4 Variables</option>
+            </select>
+        </div>
+        <label id="posText">POS: </label>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

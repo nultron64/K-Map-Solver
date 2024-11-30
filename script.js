@@ -3,6 +3,8 @@
 var canvas = document.getElementById("mainCanvas");
 var ctx = canvas.getContext('2d');
 
+var posTextElement = document.getElementById("posText");
+
 const cellSize = 80;
 var startX = 70;
 var startY = 70;
@@ -257,7 +259,45 @@ function solveKMap() {
         groups.splice(index, 1);
     }
 
+    posStr = "";
+    for (const group of groups) {
+        let si = group[0], sj = group[1], di = group[2], dj = group[3];
+        bitStrs = []; // bit strings of cells - rowgraycode + colgraycode (concatenation)
+        for(let i=si; i<=di; i++) {
+            for(let j=sj; j<=dj; j++) {
+                bitStr = rowGrayCodes[i]+colGrayCodes[j];
+                bitStrs.push(bitStr);
+            }
+        }
+        // each bitStr length is = no. of Vars
+        bitStrFlags = Array.from(bitStrs[0]);
+        // this array will track the unchanged values in bitStrs of the present group
+        // if the value at an index differs in bitstings, then that value is represented by z
+        // the values that doesn't differ in all the bitstrings are as it is (0 or 1)
+        for(bitStr of bitStrs) {
+            for(let i=0; i<nVars; i++) {
+                if (bitStr[i]!=bitStrFlags[i]) bitStrFlags[i] = 'z';
+            }
+        }
+        console.log("bit String flags"); console.log(bitStrFlags);
+
+        strTerm = "";
+        for(let i=0; i<nVars; i++) {
+            if (bitStrFlags[i]=='z') continue;
+            if (i<rowVars.length) strTerm += rowVars[i];
+            else strTerm += colVars[i-rowVars.length];
+
+            if (bitStrFlags[i]=='0') strTerm += "'"; // ' for vars that are 0,  like A'B' etc.
+        }
+        // every variable changed in a group, that group is the whole map
+        if (strTerm.length==0) strTerm = "1";
+
+        if (posStr.length>0) posStr += " + "+strTerm;
+        else posStr = strTerm;
+    }
+    posTextElement.innerText = `POS: ${posStr}`
     console.log(groups);
+    console.log(posStr);
 }
 
 function drawLine(x1, y1, x2, y2) {
@@ -362,3 +402,9 @@ document.addEventListener('keydown', (event) => {
 canvas.addEventListener('contextmenu', (event) => {
     event.preventDefault(); // Prevents the context menu from appearing
 });
+
+nVarsSelectMenu = document.getElementById("nVarsSelectMenu");
+nVarsSelectMenu.addEventListener('change', (event) => {
+    const value = parseInt(nVarsSelectMenu.value);
+    changeNVars(value);
+})
