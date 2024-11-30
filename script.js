@@ -61,6 +61,7 @@ function changeNVars(n) {
     startY = Math.trunc(height/2 - mpaHeight/2) +10
 
     map = Array(2**n).fill('0');
+    shouldUpdateCanvas = true;
 }
 changeNVars(4);
 
@@ -85,8 +86,8 @@ function solveKMap() {
     }
     console.log(xMap);
 
-    var map4Hor = []; // map of blocks of 4-cell-horizontal
-    // at i-th index, 1 if ith row has atleast one 1 and all are either 1s or Xs
+    var map4Hor = []; // map of blocks of 4-cell-horizontal - each element is an object
+    // at i-th index, {oneExists: boolean, valid: boolean}
     for(let i=0; i<nRows; i++) {
         let oneExists = false; // atleast one 1 exists
         let valid = true; // all are either 1s or Xs
@@ -97,8 +98,7 @@ function solveKMap() {
                 break;
             }
         }
-        if (oneExists && valid) map4Hor[i] = 1;
-        else map4Hor[i] = 0;
+        map4Hor[i] = {oneExists, valid};
     }
     map4Hor[nRows] = map4Hor[0]; // just one more copy of top row 
 
@@ -113,8 +113,7 @@ function solveKMap() {
                 break;
             }
         }
-        if (oneExists && valid) map4Ver[j] = 1;
-        else map4Ver[j] = 0;
+        map4Ver[j] = {oneExists, valid};
     }
     map4Ver[nCols] = map4Ver[0];
 
@@ -173,13 +172,19 @@ function solveKMap() {
     // horizontal 2x4
     if (nVars>=3) {
         for(let i=0; i<nRows; i++) {
-            if (map4Hor[i] && map4Hor[i+1]) pushIfNotSelected(i, 0, i+1, 3);
+            // in the two horizontal strips - both must be valid and at least one strip has atleast one 1
+            if ((map4Hor[i].valid && map4Hor[i+1].valid)
+                && (map4Hor[i].oneExists || map4Hor[i+1].oneExists)) 
+                    pushIfNotSelected(i, 0, i+1, 3);
         }
     }
     // vertical 2x4
     if (nVars==4) {
         for(let i=0; i<nCols; i++) {
-            if (map4Ver[i] && map4Ver[i+1]) pushIfNotSelected(0, i, 3, i+1);
+            // same logic as above
+            if ((map4Ver[i].valid && map4Ver[i+1].valid)
+                && (map4Ver[i].oneExists || map4Ver[i+1].oneExists)) 
+                    pushIfNotSelected(0, i, 3, i+1);
         }
     }
 
@@ -187,13 +192,13 @@ function solveKMap() {
     // horizontal 4-cell rows
     if (nVars>=3) {
         for(let i=0; i<nRows; i++) {
-            if (map4Hor[i]) pushIfNotSelected(i, 0, i, 3);
+            if (map4Hor[i].oneExists && map4Hor[i].valid) pushIfNotSelected(i, 0, i, 3);
         }
     }
     // vertical 4-cell columns
     if (nVars==4) {
         for(let i=0; i<nCols; i++) {
-            if (map4Ver[i]) pushIfNotSelected(0, i, 3, i);
+            if (map4Ver[i].oneExists && map4Ver[i].valid) pushIfNotSelected(0, i, 3, i);
         }
     }
 
@@ -270,6 +275,8 @@ function solveKMap() {
         }
     }
     groups = nonRedGroups;
+    // actually high priority groups appear first in 'groups' array, in nonRedGroups it gets reversed, so reverse again
+    groups.reverse();
 
     sopStr = "";
     for (const group of groups) {
@@ -368,9 +375,13 @@ function drawMap() {
     }
 }
 
+var shouldUpdateCanvas = true;
 function mainloop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawMap();
+    if (shouldUpdateCanvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawMap();
+        shouldUpdateCanvas = false;
+    }
     requestAnimationFrame(mainloop);
 }
 
@@ -403,6 +414,7 @@ canvas.addEventListener("mousedown", (event) => {
         if (map[cellIdx]=='x') map[cellIdx] = '1'; // when right clicked on x value -> it changes to 1
         else map[cellIdx] = 'x'; // it changes from 0 or 1 to x
     }
+    shouldUpdateCanvas = true;
 })
 
 document.addEventListener('keydown', (event) => {
