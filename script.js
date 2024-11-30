@@ -3,7 +3,7 @@
 var canvas = document.getElementById("mainCanvas");
 var ctx = canvas.getContext('2d');
 
-var posTextElement = document.getElementById("posText");
+var sopTextElement = document.getElementById("sopText");
 
 const cellSize = 80;
 var startX = 70;
@@ -248,6 +248,7 @@ function solveKMap() {
         // source i, j = si, sj     dest i, j = di, dj
         let si = groups[i][0], sj = groups[i][1], di = groups[i][2], dj = groups[i][3];
         // in this group, at least one cell(non-x value) be such that it is seleted only one time.
+        // otherwise this group is redundant, remaining groups already cover all the cells of this group
         let flag = false;
         for(let j=si; j<=di; j++) {
             for(let k=sj; k<=dj; k++) {
@@ -270,7 +271,7 @@ function solveKMap() {
     }
     groups = nonRedGroups;
 
-    posStr = "";
+    sopStr = "";
     for (const group of groups) {
         let si = group[0], sj = group[1], di = group[2], dj = group[3];
         bitStrs = []; // bit strings of cells - rowgraycode + colgraycode (concatenation)
@@ -304,12 +305,12 @@ function solveKMap() {
         // every variable changed in a group, that group is the whole map
         if (strTerm.length==0) strTerm = "1";
 
-        if (posStr.length>0) posStr += " + "+strTerm;
-        else posStr = strTerm;
+        if (sopStr.length>0) sopStr += " + "+strTerm;
+        else sopStr = strTerm;
     }
-    posTextElement.innerText = `POS: ${posStr}`
+    sopTextElement.innerText = `SOP: ${sopStr}`
     console.log(groups);
-    console.log(posStr);
+    console.log(sopStr);
 }
 
 function drawLine(x1, y1, x2, y2) {
