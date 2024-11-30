@@ -62,6 +62,10 @@ function changeNVars(n) {
 
     map = Array(2**n).fill('0');
     shouldUpdateCanvas = true;
+    sopTextElement.innerHTML = "SOP: ";
+
+    // FOR debugging
+    // if (nVars==4) map = ['1', '0', '1', '0', '0', '1', '0', '1', '1', '0', '1', '0', '0', '1', '0', '1']
 }
 changeNVars(4);
 
@@ -278,7 +282,9 @@ function solveKMap() {
     // actually high priority groups appear first in 'groups' array, in nonRedGroups it gets reversed, so reverse again
     groups.reverse();
 
-    sopStr = "";
+    var sopStr = "";
+    var sopInnerHtml = "SOP: ";
+    let idx = 0; // to keep track of index of group - used to color differently
     for (const group of groups) {
         let si = group[0], sj = group[1], di = group[2], dj = group[3];
         bitStrs = []; // bit strings of cells - rowgraycode + colgraycode (concatenation)
@@ -312,12 +318,135 @@ function solveKMap() {
         // every variable changed in a group, that group is the whole map
         if (strTerm.length==0) strTerm = "1";
 
-        if (sopStr.length>0) sopStr += " + "+strTerm;
+        if (sopStr.length>0) {
+            sopStr += " + "+strTerm;
+            sopInnerHtml += " + ";
+        }
         else sopStr = strTerm;
+        
+        sopInnerHtml += `<span style="color: ${colors[idx]};">${strTerm}</span>`;
+        idx++;
     }
-    sopTextElement.innerText = `SOP: ${sopStr}`
+    sopTextElement.innerHTML = sopInnerHtml;
+    drawKMapBoxes(groups);
     console.log(groups);
     console.log(sopStr);
+}
+
+const colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'indigo', 'magenta'];
+
+function drawKMapBoxes(groups) {
+    var drawn = []; // no. of boxes have been drawn on cell[i][j]; kind of similar to 'selected' matrix
+    for(let i=0; i<nRows; i++){drawn[i]=[]; for(let j=0; j<nCols; j++){drawn[i][j] = 0;}}
+
+    let idx = 0; // no. of boxes drawn;   used to get differnt color
+    ctx.lineWidth = 2;
+    for(const group of groups) {
+        ctx.strokeStyle = colors[idx];
+        let si = group[0], sj = group[1], di=group[2], dj=group[3];
+
+        let max = findMaxAndUpdateDrawn(si, sj, di, dj);
+        let cellX = startX + cellSize*sj;
+        let cellY = startY + cellSize*si;
+        let offset = 3 +4*max;
+
+        if (di<nRows && dj<nCols) { // in 4x4 case - di<=3 && dj<=3
+            // top left point of start cell
+            let boxX = cellX +offset; // x-coord of top left of this box
+            let boxY = cellY +offset; // y-coord ..
+            let boxW = (dj-sj+1)*cellSize -2*offset; // width of this box- offset at left and right decreases this width
+            let boxH = (di-si+1)*cellSize -2*offset; // height ..
+
+            ctx.strokeRect(boxX, boxY, boxW, boxH);
+        }
+        // right over-expanding case
+        else if (di<nRows) { // for 4x4 case - di<=3
+            console.log("right over expanding case")
+            // right box
+            ctx.beginPath();
+            let strokeX = startX +nCols*cellSize;
+            let strokeY = startY +si*cellSize +offset;
+            ctx.moveTo(strokeX, strokeY);
+            ctx.lineTo( (strokeX-=cellSize-offset),  (strokeY) );
+            ctx.lineTo( (strokeX),  (strokeY+=(di-si+1)*cellSize -2*offset) );
+            ctx.lineTo( (strokeX+=cellSize-offset),  (strokeY) );
+            ctx.stroke();
+
+            // left box
+            ctx.beginPath();
+            strokeX = startX;
+            strokeY = startY +si*cellSize +offset;
+            ctx.moveTo(strokeX, strokeY);
+            ctx.lineTo( (strokeX+=cellSize-offset),  (strokeY) );
+            ctx.lineTo( (strokeX),  (strokeY+=(di-si+1)*cellSize -2*offset) );
+            ctx.lineTo( (strokeX-=cellSize-offset), (strokeY) );
+            ctx.stroke();
+        }
+        // down over-expanding case
+        else if (dj<nRows) { // for 4x4 case - dj<=3
+            // bottom box
+            ctx.beginPath();
+            let strokeX = startX +sj*cellSize +offset;
+            let strokeY = startY +nRows*cellSize;
+            ctx.moveTo(strokeX, strokeY);
+            ctx.lineTo( (strokeX), (strokeY-=cellSize-offset) );
+            ctx.lineTo( (strokeX+=(dj-sj+1)*cellSize -2*offset), (strokeY) );
+            ctx.lineTo( (strokeX), (strokeY+=cellSize-offset) );
+            ctx.stroke();
+
+            // top box
+            ctx.beginPath();
+            strokeX = startX +sj*cellSize +offset;
+            strokeY = startY;
+            ctx.moveTo(strokeX, strokeY);
+            ctx.lineTo( (strokeX), (strokeY+=cellSize-offset) );
+            ctx.lineTo( (strokeX+=(dj-sj+1)*cellSize -2*offset), (strokeY) );
+            ctx.lineTo( (strokeX), (strokeY-=cellSize-offset) );
+            ctx.stroke();
+        }
+        // both right & down over-expanding case  - 2x2 bottom-down box case
+        else {
+            // bottom-right
+            let celloff = cellSize -offset;
+            ctx.beginPath();
+            let strokeX = startX +nCols*cellSize;
+            let strokeY = startY +si*cellSize +offset; // si = nRows-1
+            ctx.moveTo(strokeX, strokeY);
+            ctx.lineTo((strokeX-=celloff), (strokeY));
+            ctx.lineTo((strokeX), (strokeY+=celloff));
+            // bottom left
+            ctx.moveTo((strokeX=startX+cellSize-offset), (strokeY));
+            ctx.lineTo((strokeX), (strokeY-=celloff));
+            ctx.lineTo((strokeX-=celloff), (strokeY));
+            // top left
+            ctx.moveTo((strokeX), (strokeY=startY+cellSize-offset));
+            ctx.lineTo((strokeX+=celloff), (strokeY));
+            ctx.lineTo((strokeX), (strokeY-=celloff));
+            // top right
+            strokeX = startX +sj*cellSize +offset; // sj = nCols -1
+            ctx.moveTo(strokeX, strokeY);
+            ctx.lineTo((strokeX), (strokeY+=celloff));
+            ctx.lineTo((strokeX+=celloff), (strokeY));
+            ctx.stroke();
+        }
+
+        idx++;
+    }
+
+    function findMaxAndUpdateDrawn(si, sj, di, dj) {
+        // finds the max of from si:sj to di:dj in 'drawn'. 
+        // and updates +1 to all these cells in 'drawn'
+        let max = 0;
+        for(let i=si; i<=di; i++) {
+            for(let j=sj; j<=dj; j++) {
+                let mi = i%nRows;
+                let mj = j%nCols;
+                if (drawn[mi][mj]>max) max = drawn[mi][mj];
+                drawn[mi][mj] += 1;
+            }
+        }
+        return max;
+    }
 }
 
 function drawLine(x1, y1, x2, y2) {
