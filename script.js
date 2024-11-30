@@ -393,7 +393,7 @@ canvas.addEventListener("mousedown", (event) => {
 })
 
 document.addEventListener('keydown', (event) => {
-    if (event.key==='s') {
+    if (event.key==='Enter') {
         solveKMap();
     }
 })
