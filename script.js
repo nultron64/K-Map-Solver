@@ -238,26 +238,37 @@ function solveKMap() {
         }
     }
 
-
+    console.log("Before deleting redundant groups")
+    var dupGroups = Array.from(groups)
+    console.log(dupGroups)
     // --- remove the redundant groups
     // debugger;
-    toBeDeleted = []; // index of a group in groups that is to be deleted
+    nonRedGroups = []; // non redundant group or non-completely overlapping groups
     for(let i=groups.length-1; i>=0; i--) {
         // source i, j = si, sj     dest i, j = di, dj
         let si = groups[i][0], sj = groups[i][1], di = groups[i][2], dj = groups[i][3];
-        // in this group, at least one vertex be such that it is seleted only one time.
+        // in this group, at least one cell(non-x value) be such that it is seleted only one time.
         let flag = false;
         for(let j=si; j<=di; j++) {
             for(let k=sj; k<=dj; k++) {
                 mi=j%nRows; mj=k%nCols;
-                if (selected[mi][mj]==1) flag = true;
+                if (xMap[mi][mj]!='x' && selected[mi][mj]==1) flag = true;
             }
         }
-        if (flag==false) toBeDeleted.push(i);
+        if (flag==true) {
+            nonRedGroups.push(groups[i]);
+        }
+        else {
+            // we deleting this particular group, so remove their count from 'selected'
+            for(let j=si; j<=di; j++) {
+                for(let k=sj; k<=dj; k++) {
+                    mi=j%nRows; mj=k%nCols;
+                    selected[mi][mj] -= 1;
+                }
+            }
+        }
     }
-    for(const index of toBeDeleted) {
-        groups.splice(index, 1);
-    }
+    groups = nonRedGroups;
 
     posStr = "";
     for (const group of groups) {
@@ -265,7 +276,8 @@ function solveKMap() {
         bitStrs = []; // bit strings of cells - rowgraycode + colgraycode (concatenation)
         for(let i=si; i<=di; i++) {
             for(let j=sj; j<=dj; j++) {
-                bitStr = rowGrayCodes[i]+colGrayCodes[j];
+                mi = i%nRows; mj=j%nCols;
+                bitStr = rowGrayCodes[mi]+colGrayCodes[mj];
                 bitStrs.push(bitStr);
             }
         }

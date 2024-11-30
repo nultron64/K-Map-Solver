@@ -13,12 +13,14 @@ body {
     height: 100%;
     margin-top: 80px;
     position: relative;
+    display: inline-block;
 }
 
 
 #mainCanvas {
     background-color: #d7d8d8;
     border-radius: 5px;
+    display: block;
 }
 
 #posText {
