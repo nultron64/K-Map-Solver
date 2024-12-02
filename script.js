@@ -1,9 +1,10 @@
 
 /** @type HTMLCanvasElement */
-var canvas = document.getElementById("mainCanvas");
-var ctx = canvas.getContext('2d');
+const canvas = document.getElementById("mainCanvas");
+const ctx = canvas.getContext('2d');
 
-var sopTextElement = document.getElementById("sopText");
+const sopTextElement = document.getElementById("sopText");
+const truthTableElement = document.getElementById("truthTable")
 
 const cellSize = 80;
 var startX = 70;
@@ -15,11 +16,15 @@ const graycodes4 = ["00", "01", "11", "10"];
 var nRows = 2;      // no of rows
 var nCols = 4;      // no of columns
 var nVars = 3;      // no of variables in kmap
+var nCells = 8;     // no of cells in kmap
 var map = [];       // kmap values
 var rowGrayCodes = [];
 var colGrayCodes = [];
 var rowVars = "";   // variables labeled for the rows 
 var colVars = "";   // variables labeled for the columns   Ex: AB, CD,  A, BC, etc..
+var varsStr = "";   // string of variables - "ABC"  "AB"
+var mapIdx2BinIdx = [];
+var binIdx2mapIdx = [];
 
 function changeNVars(n) {
     nVars = n;
@@ -50,6 +55,8 @@ function changeNVars(n) {
     else if (n===3) rowVars = "A",  colVars = "BC";
     else if (n===4) rowVars = "AB", colVars = "CD";
 
+    varsStr = rowVars+colVars;
+
     // calculating startX startY
     let width = canvas.width;
     let height = canvas.height;
@@ -60,16 +67,106 @@ function changeNVars(n) {
     startX = Math.trunc(width/2 - mapWidth/2)   +10     // +10 to "look" middle alligned - there are more elements on the left side
     startY = Math.trunc(height/2 - mpaHeight/2) +10
 
-    map = Array(2**n).fill('0');
+    
+    // creating an array -  k-map index to binary index
+    // another array - bin index to k-map index
+    mapIdx2BinIdx.length = 0;
+    binIdx2mapIdx.length = 0;
+    for(let i=0; i<nRows; i++) {
+        for(let j=0; j<nCols; j++) {
+            const grayCode = rowGrayCodes[i]+colGrayCodes[j];
+            let binIdx = parseInt(grayCode, 2);
+            let mapIdx = i*nCols+j;
+            mapIdx2BinIdx[mapIdx] = binIdx;
+            binIdx2mapIdx[binIdx] = mapIdx;
+        }
+    }
+
+    nCells = nRows*nCols;
+    map = Array(nCells).fill('0');
+
     shouldUpdateCanvas = true;
     sopTextElement.innerHTML = "SOP: ";
 
+    generateNewTruthTable();
     // FOR debugging
     // if (nVars==4) map = ['1', '0', '1', '0', '0', '1', '0', '1', '1', '0', '1', '0', '0', '1', '0', '1']
 }
 changeNVars(4);
 
-selected = [];
+function generateNewTruthTable() {
+    //** @type HTMLTableElement */
+    const table = truthTableElement;
+
+    //** @type HTMLTableSectionElement */
+    thead = table.querySelector("thead");
+
+    thead.innerHTML = '';
+    const headerRow = document.createElement("tr");
+
+    headerRow.appendChild(document.createElement("th")); // one emptry cell
+    for(const chr of varsStr) {
+        const th = document.createElement("th");
+        const editBox = document.createElement("input");
+        editBox.type = "text";
+        editBox.className = "tt-var-edit-box";
+        editBox.value = chr;
+        th.appendChild(editBox);
+        headerRow.appendChild(th);
+    }
+    const td = document.createElement("th");
+    td.textContent = "Out";
+    headerRow.appendChild(td);
+
+    thead.appendChild(headerRow);
+
+    tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+    let rows = nCells;
+    for(let i=0; i<rows; i++) {
+        const dataRow = document.createElement("tr");
+        let td = document.createElement("td");
+        td.textContent = i;
+        dataRow.appendChild(td);
+        const binStr = i.toString(2).padStart(nVars, '0');
+        for(let j=0; j<nVars; j++) {
+            const td = document.createElement("td");
+            td.textContent = binStr[j];
+            dataRow.appendChild(td);
+        }
+
+        // output cell
+        td = document.createElement("td");
+        let td_btn = document.createElement("button");
+        td_btn.className = "tt-out-btn";
+        td_btn.innerText = "0";
+
+        td_btn.onclick = function() {
+            const currVal = td_btn.innerText;
+            let nextVal;
+            if (currVal=='0') nextVal='1';
+            else if (currVal=='1') nextVal='x';
+            else if (currVal=='x') nextVal='0';
+            changeMapCell(binIdx2mapIdx[i], nextVal);
+        }
+
+        td.appendChild(td_btn);
+
+        dataRow.appendChild(td);
+
+        tbody.appendChild(dataRow);
+    }
+}
+
+function changeMapCell(mapIdx, value) {
+    map[mapIdx] = String(value);
+    shouldUpdateCanvas = true;
+    let binIdx = mapIdx2BinIdx[mapIdx];
+    const row = truthTableElement.rows[binIdx+1];
+    const button = row.cells[nVars+1].querySelector("button");
+    button.innerText = value;
+    console.log(row);
+}
 
 function solveKMap() {
     // debugger;
@@ -124,7 +221,7 @@ function solveKMap() {
     console.log(map4Hor)
     console.log(map4Ver)
 
-    selected = []; // nRows x nCols array 
+    var selected = []; // nRows x nCols array 
     // initializing with false value
     for(let i=0; i<nRows; i++){ selected[i]=[]; for(let j=0; j<nCols; j++){selected[i][j]=0} }
 
@@ -516,6 +613,7 @@ function mainloop() {
 
 mainloop();
 
+var lastChangedKMapCellValue = '0';
 
 // handle mouse click events on canvas
 canvas.addEventListener("mousedown", (event) => {
@@ -534,16 +632,40 @@ canvas.addEventListener("mousedown", (event) => {
 
     // index of the cell on which mouse is clicked
     const cellIdx = row*nCols +col;
+    let currVal = map[cellIdx];
+    let nextVal;
     if (event.button === 0) { // left click
-        if (map[cellIdx] == '0') map[cellIdx] = '1';
-        else if (map[cellIdx] == '1') map[cellIdx] = '0';
-        else map[cellIdx] = '0'; // when left clicked on x value -> it changes to 0
+        if (currVal == '0') nextVal = '1';
+        else if (currVal == '1') nextVal = '0';
+        else nextVal = '0'; // when left clicked on x value -> it changes to 0
     }
     else if(event.button === 2) { // right click
-        if (map[cellIdx]=='x') map[cellIdx] = '1'; // when right clicked on x value -> it changes to 1
-        else map[cellIdx] = 'x'; // it changes from 0 or 1 to x
+        if (currVal=='x') nextVal = '1'; // when right clicked on x value -> it changes to 1
+        else nextVal = 'x'; // it changes from 0 or 1 to x
     }
-    shouldUpdateCanvas = true;
+    changeMapCell(cellIdx, nextVal);
+    lastChangedKMapCellValue = map[cellIdx];
+})
+
+canvas.addEventListener("mousemove", (event) => {
+    if (event.buttons!=1 && event.buttons!=2) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const mx = event.clientX - rect.left; 
+    const my = event.clientY - rect.top;
+
+    if (mx<startX || my<startY) return;
+
+    // calculating in which row and column the mouse is clicked
+    const row = Math.trunc((my-startY)/cellSize)
+    const col = Math.trunc((mx-startX)/cellSize)
+    // these are in 0-indexing
+
+    if (row>=nRows || col>=nCols) return;
+
+    // index of the cell on which mouse is clicked
+    const cellIdx = row*nCols +col;
+    changeMapCell(cellIdx, lastChangedKMapCellValue);
 })
 
 document.addEventListener('keydown', (event) => {

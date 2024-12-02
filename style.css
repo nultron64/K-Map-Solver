@@ -1,35 +1,104 @@
 body {
+    margin: 0px;
     background-color: #FFF6E9;
-    display: flex;
-    justify-content: center;
+}
+
+.top-bar {
+    width: 100%;
+    height: 60px;
+    background-color: rgb(127, 192, 86);
     align-items: center;
 }
 
+#sourceCodeLink {
+    border: rgb(235, 235, 235) 3px solid;
+    background-color: rgb(23, 61, 21);
+    margin: 10px;
+    color: white;
+    position: absolute;
+    top: 0px;
+    right: 10px;
+    padding: 5px;
+    border-radius: 10px;
+}
+
 .main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 80px;
+    padding: 20px;
+    background-color: #F9C0AB;
+}
+
+.table-container {
+    flex-shrink: 1;
+    width: auto;
     text-align: center;
+    align-items: center;
 }
 
 .canvas-container {
     height: 100%;
-    margin-top: 80px;
     position: relative;
-    display: inline-block;
+    flex-shrink: 0;
 }
 
 
 #mainCanvas {
     background-color: #d7d8d8;
     border-radius: 5px;
-    display: block;
 }
 
 #sopText {
-    padding-top: 50px;
+    padding-top: 20px;
+    display: inline-block;
     font-size: 32px;
 }
 
 #nVarsSelectMenu {
     position: absolute;
+    background-color: #A8CD89;
     top: 5px;
     right: 5px;
+    border-radius: 3px;
+}
+
+.sop-container {
+    text-align: center;
+}
+
+.truth-table {
+    border-collapse: collapse;
+    border: black solid;
+    width: 200px;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.truth-table > caption {
+    font-size: 22px;
+}
+
+.truth-table td {
+    height: 20px;
+    align-items: center;
+}
+
+.tt-out-btn {
+    background-color: transparent;
+    border: solid black 1px;
+    height: 20px;
+    width: 21px;
+    border-radius: 5px;
+    text-align: start;
+}
+
+.tt-var-edit-box {
+    width: 12px;
+    height: 14px;
+    background-color: transparent;
+    border: solid black 1px;
+    align-items: center;
+    text-align: center;
 }

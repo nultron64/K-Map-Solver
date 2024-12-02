@@ -7,7 +7,32 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="top-bar">
+        <a id="sourceCodeLink" href="https://github.com/nultron64/K-Map-Solver">View source code</a>
+    </div>
     <div class="main-container">
+        <div class="table-container">
+            <table class="truth-table" id="truthTable" border="1">
+                <caption>Truth Table</caption>
+                <thead>
+                    <tr>
+                        <th> </th>
+                        <th>A</th>
+                        <th>B</th>
+                        <th>C</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- <input type="text"> -->
+        </div>
         <div class="canvas-container">
             <canvas id="mainCanvas" width="450" height="450"></canvas>
 
@@ -17,7 +42,8 @@
                 <option value="4" selected>4 Variables</option>
             </select>
         </div>
-        <br>
+    </div>
+    <div class="sop-container">
         <label id="sopText">SOP: </label>
     </div>
     <script src="script.js"></script>
