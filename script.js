@@ -86,7 +86,7 @@ function changeNVars(n) {
     map = Array(nCells).fill('0');
 
     shouldUpdateCanvas = true;
-    sopTextElement.innerHTML = "SOP: ";
+    sopTextElement.innerHTML = "SOP: 0";
 
     generateNewTruthTable();
     // FOR debugging
@@ -105,12 +105,30 @@ function generateNewTruthTable() {
     const headerRow = document.createElement("tr");
 
     headerRow.appendChild(document.createElement("th")); // one emptry cell
-    for(const chr of varsStr) {
+    for(let i=0; i<varsStr.length; i++) {
         const th = document.createElement("th");
         const editBox = document.createElement("input");
         editBox.type = "text";
         editBox.className = "tt-var-edit-box";
-        editBox.value = chr;
+        editBox.value = varsStr[i];
+
+
+        editBox.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                editBox.blur();
+            }
+            else if (event.key.length == 1) {
+                const code = event.key.charCodeAt(0);
+                if ((65<=code && code<=90) || (97<=code && code<=122)) {
+                    event.preventDefault();
+                    const val = event.key.toUpperCase();
+                    if (updateVarsNames(i, val)) { // if update vars names success
+                        editBox.value = val;
+                    }
+                }
+            }
+        })
+
         th.appendChild(editBox);
         headerRow.appendChild(th);
     }
@@ -165,12 +183,45 @@ function changeMapCell(mapIdx, value) {
     const row = truthTableElement.rows[binIdx+1];
     const button = row.cells[nVars+1].querySelector("button");
     button.innerText = value;
-    console.log(row);
+    // when map cell value is changed, clear the groups array
+    groups = [];
 }
 
+function updateVarsNames(idx, val) {
+    if (idx<0 || idx>=varsStr.len || val.length!=1) return false;
+    let subIdx = varsStr.indexOf(val);
+    val = val.toUpperCase();
+
+    if (subIdx!=-1) { // if already exists, then swap the values
+        change(subIdx, varsStr[idx]);
+        change(idx, val);
+        const headerRow = truthTableElement.querySelector("thead tr");
+        const subIdxEditBox = headerRow.childNodes[subIdx+1].firstChild;
+        subIdxEditBox.value = varsStr[subIdx];
+    }
+    else change(idx, val);
+
+    function change(idx, val) {
+        varsStr = stringReplaceAt(varsStr, idx, val);
+        if (idx<rowVars.length) {
+            rowVars = stringReplaceAt(rowVars, idx, val);
+        } else {
+            colVars = stringReplaceAt(colVars, idx-rowVars.length, val);
+        }
+    }
+    shouldUpdateCanvas = true;
+    return true;
+}
+
+function stringReplaceAt(str, idx, val) {
+    str = str.slice(0, idx) + val + str.slice(idx+1);
+    return str;
+}
+
+var groups = []; // groups of boxes - claculated by sovleKMap()
 function solveKMap() {
     // debugger;
-    var groups = [];
+    groups = [];
     var xMap = []; 
     // extended map, one more copy of left column is placed at right, one more copy of top row is place at bottom
     // bottom right cell is same as top left
@@ -407,8 +458,7 @@ function solveKMap() {
         strTerm = "";
         for(let i=0; i<nVars; i++) {
             if (bitStrFlags[i]=='z') continue;
-            if (i<rowVars.length) strTerm += rowVars[i];
-            else strTerm += colVars[i-rowVars.length];
+            strTerm += varsStr[i];
 
             if (bitStrFlags[i]=='0') strTerm += "'"; // ' for vars that are 0,  like A'B' etc.
         }
@@ -424,10 +474,9 @@ function solveKMap() {
         sopInnerHtml += `<span style="color: ${colors[idx]};">${strTerm}</span>`;
         idx++;
     }
+    if (groups.length==0) sopInnerHtml += " 0";
     sopTextElement.innerHTML = sopInnerHtml;
-    drawKMapBoxes(groups);
     console.log(groups);
-    console.log(sopStr);
 }
 
 const colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'indigo', 'magenta'];
@@ -569,7 +618,7 @@ function drawLines() {
     drawLine(startX, startY, startX-35, startY-35);
 }
 
-function drawMap() {
+function drawCanvas() {
     drawLines();
     // set font properties
     ctx.fillStyle = "black";
@@ -599,13 +648,14 @@ function drawMap() {
     for(let i=0; i<nCols; i++) {
         ctx.fillText(colGrayCodes[i], firstMidX+i*cellSize, startY-15);
     }
+    drawKMapBoxes(groups);
 }
 
 var shouldUpdateCanvas = true;
 function mainloop() {
     if (shouldUpdateCanvas) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawMap();
+        drawCanvas();
         shouldUpdateCanvas = false;
     }
     requestAnimationFrame(mainloop);
@@ -671,6 +721,7 @@ canvas.addEventListener("mousemove", (event) => {
 document.addEventListener('keydown', (event) => {
     if (event.key==='Enter') {
         solveKMap();
+        shouldUpdateCanvas = true;
     }
 })
 

@@ -22,6 +22,10 @@ body {
     border-radius: 10px;
 }
 
+#sourceCodeLink:hover {
+    cursor: pointer;;
+}
+
 .main-container {
     display: flex;
     justify-content: center;
