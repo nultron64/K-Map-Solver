@@ -67,7 +67,7 @@ function changeNVars(n) {
     startX = Math.trunc(width/2 - mapWidth/2)   +10     // +10 to "look" middle alligned - there are more elements on the left side
     startY = Math.trunc(height/2 - mpaHeight/2) +10
 
-    
+    groups = [];
     // creating an array -  k-map index to binary index
     // another array - bin index to k-map index
     mapIdx2BinIdx.length = 0;
@@ -209,6 +209,7 @@ function updateVarsNames(idx, val) {
             colVars = stringReplaceAt(colVars, idx-rowVars.length, val);
         }
     }
+    groups = []; // TODO:(less priority) - change this later - you don't actually need to recalculate k-map
     shouldUpdateCanvas = true;
     return true;
 }
@@ -487,6 +488,7 @@ function drawKMapBoxes(groups) {
 
     let idx = 0; // no. of boxes drawn;   used to get differnt color
     ctx.lineWidth = 2;
+    let outOff = 6; // out offset - no. of pixels off the k-map for over-expanding boxes
     for(const group of groups) {
         ctx.strokeStyle = colors[idx];
         let si = group[0], sj = group[1], di=group[2], dj=group[3];
@@ -505,27 +507,33 @@ function drawKMapBoxes(groups) {
 
             ctx.strokeRect(boxX, boxY, boxW, boxH);
         }
+        // over extending boxes should be a little bit outside the box
         // right over-expanding case
         else if (di<nRows) { // for 4x4 case - di<=3
             console.log("right over expanding case")
             // right box
             ctx.beginPath();
-            let strokeX = startX +nCols*cellSize;
+            let strokeX = startX +nCols*cellSize +outOff;
             let strokeY = startY +si*cellSize +offset;
+            // cellSize -offset will be the width from offset to the border of k-map
+            // we add outOff also to make it overflow from the table
+            let width = cellSize-offset +outOff;
+            let height = (di-si+1)*cellSize -2*offset;
             ctx.moveTo(strokeX, strokeY);
-            ctx.lineTo( (strokeX-=cellSize-offset),  (strokeY) );
-            ctx.lineTo( (strokeX),  (strokeY+=(di-si+1)*cellSize -2*offset) );
-            ctx.lineTo( (strokeX+=cellSize-offset),  (strokeY) );
+            ctx.lineTo( (strokeX-=width),  (strokeY) );
+            ctx.lineTo( (strokeX),  (strokeY+=height) );
+            ctx.lineTo( (strokeX+=width),  (strokeY) );
             ctx.stroke();
 
             // left box
             ctx.beginPath();
-            strokeX = startX;
+            strokeX = startX -outOff;
             strokeY = startY +si*cellSize +offset;
+            // width and height will be same here
             ctx.moveTo(strokeX, strokeY);
-            ctx.lineTo( (strokeX+=cellSize-offset),  (strokeY) );
-            ctx.lineTo( (strokeX),  (strokeY+=(di-si+1)*cellSize -2*offset) );
-            ctx.lineTo( (strokeX-=cellSize-offset), (strokeY) );
+            ctx.lineTo( (strokeX+=width),  (strokeY) );
+            ctx.lineTo( (strokeX),  (strokeY+=height) );
+            ctx.lineTo( (strokeX-=width), (strokeY) );
             ctx.stroke();
         }
         // down over-expanding case
@@ -533,29 +541,32 @@ function drawKMapBoxes(groups) {
             // bottom box
             ctx.beginPath();
             let strokeX = startX +sj*cellSize +offset;
-            let strokeY = startY +nRows*cellSize;
+            let strokeY = startY +nRows*cellSize +outOff;
+            // same logic as previous case
+            let width = (dj-sj+1)*cellSize -2*offset;
+            let height = cellSize -offset +outOff;
             ctx.moveTo(strokeX, strokeY);
-            ctx.lineTo( (strokeX), (strokeY-=cellSize-offset) );
-            ctx.lineTo( (strokeX+=(dj-sj+1)*cellSize -2*offset), (strokeY) );
-            ctx.lineTo( (strokeX), (strokeY+=cellSize-offset) );
+            ctx.lineTo( (strokeX), (strokeY-=height) );
+            ctx.lineTo( (strokeX+=width), (strokeY) );
+            ctx.lineTo( (strokeX), (strokeY+=height) );
             ctx.stroke();
 
             // top box
             ctx.beginPath();
             strokeX = startX +sj*cellSize +offset;
-            strokeY = startY;
+            strokeY = startY -outOff;
             ctx.moveTo(strokeX, strokeY);
-            ctx.lineTo( (strokeX), (strokeY+=cellSize-offset) );
-            ctx.lineTo( (strokeX+=(dj-sj+1)*cellSize -2*offset), (strokeY) );
-            ctx.lineTo( (strokeX), (strokeY-=cellSize-offset) );
+            ctx.lineTo( (strokeX), (strokeY+=height) );
+            ctx.lineTo( (strokeX+=width), (strokeY) );
+            ctx.lineTo( (strokeX), (strokeY-=height) );
             ctx.stroke();
         }
         // both right & down over-expanding case  - 2x2 bottom-down box case
         else {
+            let celloff = cellSize -offset +outOff; // cellsize and offsets
             // bottom-right
-            let celloff = cellSize -offset;
             ctx.beginPath();
-            let strokeX = startX +nCols*cellSize;
+            let strokeX = startX +nCols*cellSize +outOff;
             let strokeY = startY +si*cellSize +offset; // si = nRows-1
             ctx.moveTo(strokeX, strokeY);
             ctx.lineTo((strokeX-=celloff), (strokeY));
