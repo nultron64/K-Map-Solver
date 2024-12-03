@@ -483,7 +483,11 @@ function solveKMap() {
 const colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'indigo', 'magenta'];
 
 function drawKMapBoxes(groups) {
-    var drawn = []; // no. of boxes have been drawn on cell[i][j]; kind of similar to 'selected' matrix
+    var drawn = []; // no. of boxes have been drawn on drawn[i][j]; kind of similar to 'selected' matrix
+    // drawn[i][j] - consider as bit string - if 0th bit is 1, it says that a box with offset 0 is drawn on drawn[i][j]
+    // generally if some kth bit is 1 - it says that a box with offset k 
+    // note that the acutal offset is not k  - it's calculated from k - like a +b*k
+    
     for(let i=0; i<nRows; i++){drawn[i]=[]; for(let j=0; j<nCols; j++){drawn[i][j] = 0;}}
 
     let idx = 0; // no. of boxes drawn;   used to get differnt color
@@ -591,18 +595,35 @@ function drawKMapBoxes(groups) {
     }
 
     function findMaxAndUpdateDrawn(si, sj, di, dj) {
-        // finds the max of from si:sj to di:dj in 'drawn'. 
-        // and updates +1 to all these cells in 'drawn'
-        let max = 0;
+        // OR the all values from (si,sj) to (di, dj)
+        // find the least significat bit that has value zero.
+        let val = 0;
         for(let i=si; i<=di; i++) {
             for(let j=sj; j<=dj; j++) {
                 let mi = i%nRows;
                 let mj = j%nCols;
-                if (drawn[mi][mj]>max) max = drawn[mi][mj];
-                drawn[mi][mj] += 1;
+                val |= drawn[mi][mj];
             }
         }
-        return max;
+        let lsbZero = 1; // least significant bit that has value zero
+        // lsbZero is of this form ...00001000...  we have 1 at the position of lsb zero in val
+        let idx = 0; // index of lsb zero
+        let dupVal = val; 
+        while( dupVal&1 == 1) {
+            lsbZero = lsbZero<<1;
+            idx++;
+            dupVal = dupVal>>1;
+        }
+        // we will return idx (for offset value) - so update accordingly
+        // all the current drawn elements should be updated with lsbZero bit
+        for(let i=si; i<=di; i++) {
+            for(let j=sj; j<=dj; j++) {
+                let mi = i%nRows;
+                let mj = j%nCols;
+                drawn[mi][mj] = drawn[mi][mj] | lsbZero;
+            }
+        }
+        return idx;
     }
 }
 
