@@ -114,6 +114,7 @@ function generateNewTruthTable() {
 
 
         editBox.addEventListener("keydown", (event) => {
+            if (event.key == "Tab") return; // so that it doesn't ignore default action - default action: activates next box
             event.preventDefault();
             if (event.key === "Enter") {
                 editBox.blur();
