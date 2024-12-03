@@ -48,6 +48,35 @@
     <div class="sop-container">
         <label id="sopText">SOP: 0</label>
     </div>
+    <hr class="styled-hr">
+    <div class="guide-div">
+        <h2>User Guide</h2>
+        <h4>Changing Output Value in K-Map</h4>
+        <ul>
+            <li>If the value of the cell is 0 or 1: Left-clicking on it flips the value (i.e., changes 0 to 1 or 1 to 0) and right-click changes the value to x.</li>
+            <li>If the value of the cell is x: Left-clicking on it changes the value to 0 and right-click changes the value to 1</li>
+            <li><strong>Click and Drag:</strong> After clicking on a cell, hold the mouse button and you can drag that changed value to the neighbouring cells.</li>
+        </ul>
+        <h4>Changing Output Value in Truth Table</h4>
+        <ul>
+            <li>All the elements in the "Out" column of the truth table are buttons, clicking on a button cycles the value through 0, 1, and x (in that order).</li>
+            <li>K-Map and Truth Table are synchronized, so any changes made in one will automatically be reflected in the other.</li>
+        </ul>
+        <h4>Changing Variable Names</h4>
+        <ul>
+            <li>The elements of the header row are text edit boxes, click on a box and type a character to change the variable name.</li>
+            <li>Variable names are limited to a single character. If multiple characters are entered, only the last character will be used.</li>
+            <li>Variable names must be uppercase alphabetic characters. Lowercase entries will be automatically converted to uppercase.</li>
+        </ul>
+        <h4>Changing the Number Of Variables</h4>
+        <ul>
+            <li>Use the dropdown menu located at the top right corner of K-Map.</li>
+        </ul>
+        <h4>Solving K-Map</h4>
+        <ul>
+            <li>Click the "Solve K-Map" button or press the "Enter" key on your keyboard.</li>
+        </ul>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
