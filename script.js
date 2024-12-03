@@ -114,13 +114,13 @@ function generateNewTruthTable() {
 
 
         editBox.addEventListener("keydown", (event) => {
+            event.preventDefault();
             if (event.key === "Enter") {
                 editBox.blur();
             }
             else if (event.key.length == 1) {
                 const code = event.key.charCodeAt(0);
                 if ((65<=code && code<=90) || (97<=code && code<=122)) {
-                    event.preventDefault();
                     const val = event.key.toUpperCase();
                     if (updateVarsNames(i, val)) { // if update vars names success
                         editBox.value = val;
