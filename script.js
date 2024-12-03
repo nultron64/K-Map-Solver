@@ -725,6 +725,13 @@ document.addEventListener('keydown', (event) => {
     }
 })
 
+// event listener for kmap button
+document.getElementById("solveKMapBtn")
+    .addEventListener("click", (event) => {
+        solveKMap();
+        shouldUpdateCanvas = true;
+    })
+
 // disabling right click context menu on canvas
 canvas.addEventListener('contextmenu', (event) => {
     event.preventDefault(); // Prevents the context menu from appearing
