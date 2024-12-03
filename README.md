@@ -1,5 +1,3 @@
 # K-Map Solver
 
-https://nultron64.github.io/K-Map-Solver/
-
-currently under development.
+Deployed on Github Pages - https://nultron64.github.io/K-Map-Solver/
